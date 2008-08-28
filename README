@@ -1,0 +1,41 @@
+AbSplitTester
+=============
+
+The purpose of this plugin is to make it as easy to do A/B split tests as it is not to.
+It allows you to make each hit to a URL cycle through different treatments, and to
+record each treatment as a separate page in Google Analytics.
+
+
+When you're running an A/B split test, each design you want to test is called a "treatment".
+
+./script/generate ab_split_tester .
+rake db:migrate
+
+To use this plugin, first add "include AbSplitTestSystem" to ApplicationController.
+Next create an action for each of your new treatments. If you are testing an index page,
+for example, then you could create actions named index_treatment_2, index_treatment_3, etc.
+(Your current index action and template are considered a treatment.)
+
+To cycle through your treatments, add this to a controller:
+ab_split_test("campaign_name", "default_treatment_action_name", "new_treatment_1_action_name", "new_treatment_2_action_name")
+campaign_name is to differentiate this test from others you might run in the future on the
+same action.
+
+Right now you can only track hits with Google Analytics.  Add the following to your views,
+after the Google Analytics code and inside a javascript block: 
+<%= ab_google_analytics_urchin_tracker %>
+
+This calls the urchinTracker javascript method to set the "name" of the displayed page in
+Analytics so that Analytics can differentiate your treatments.
+
+For example, if you had the following in yor controller:
+ab_split_test("test1", "index", "index_treatment_2", "index_treatment_3")
+
+Then adding "<%= ab_google_analytics_urchin_tracker %>" to your views would make Analytics
+record hits to your treatments as follows:
+/books/test1/index
+/books/test2/index_treatment_2
+/books/test1/index_treatment_3
+
+You can put "<%= ab_google_analytics_urchin_tracker %>" in view templates which aren't
+treatments. It will only output the urchinTracker method if Rails is rendering a treatment.
